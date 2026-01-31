@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, uploadedFiles, analyses, statistics, InsertUploadedFile, InsertAnalysis, InsertStatistic } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,74 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+export async function createUploadedFile(file: InsertUploadedFile) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(uploadedFiles).values(file);
+  return result;
+}
+
+export async function getUploadedFilesByUserId(userId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.select().from(uploadedFiles).where(eq(uploadedFiles.userId, userId));
+}
+
+export async function getUploadedFileById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.select().from(uploadedFiles).where(eq(uploadedFiles.id, id)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function createAnalysis(analysis: InsertAnalysis) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(analyses).values(analysis);
+  return result;
+}
+
+export async function getAnalysesByFileId(fileId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.select().from(analyses).where(eq(analyses.fileId, fileId));
+}
+
+export async function getAnalysisById(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.select().from(analyses).where(eq(analyses.id, id)).limit(1);
+  return result.length > 0 ? result[0] : null;
+}
+
+export async function updateAnalysisInsights(id: number, insights: any, anomalies: any, recommendations: any) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  await db.update(analyses).set({
+    insights: JSON.stringify(insights),
+    anomalies: JSON.stringify(anomalies),
+    recommendations: JSON.stringify(recommendations),
+  }).where(eq(analyses.id, id));
+}
+
+export async function createStatistics(stats: InsertStatistic) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  const result = await db.insert(statistics).values(stats);
+  return result;
+}
+
+export async function getStatisticsByAnalysisId(analysisId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  
+  return await db.select().from(statistics).where(eq(statistics.analysisId, analysisId));
+}
