@@ -62,3 +62,4 @@
 
 - [x] Validação de ficheiros CSV rejeitando ficheiros válidos por tipo MIME incorreto
 - [x] Melhorar detecção de tipo de ficheiro baseada em extensão e conteúdo
+- [x] Erro "Buffer not defined" ao fazer upload de ficheiros no cliente

@@ -41,7 +41,13 @@ export default function FileUploadPage() {
     setIsLoading(true);
     try {
       const buffer = await file.arrayBuffer();
-      const base64 = Buffer.from(buffer).toString("base64");
+      // Converter ArrayBuffer para base64 sem usar Buffer (que não existe no navegador)
+      const bytes = new Uint8Array(buffer);
+      let binary = '';
+      for (let i = 0; i < bytes.byteLength; i++) {
+        binary += String.fromCharCode(bytes[i]);
+      }
+      const base64 = btoa(binary);
       const fileType = file.name.toLowerCase().endsWith(".xlsx") ? "xlsx" : "csv";
 
       const result = await uploadMutation.mutateAsync({
