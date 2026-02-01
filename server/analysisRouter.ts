@@ -164,6 +164,8 @@ export const analysisRouter = router({
 
       return {
         rows: paginatedRows,
+        columns: processedData.columns,
+        columnCount: processedData.columnCount,
         totalRows: filteredRows.length,
         page: input.page,
         pageSize: input.pageSize,
@@ -246,9 +248,33 @@ export const analysisRouter = router({
         }
       }
 
+      // Preparar dados de anomalias
+      const anomalies: any[] = [];
+      for (const column of processedData.columns) {
+        if (column.type === "number") {
+          const values: any[] = processedData.rows.map((row: any) => row[column.name]);
+          const numericValues = (values as any[])
+            .map((v) => Number(v))
+            .filter((v) => !isNaN(v));
+          const anomalyResult = detectAnomalies(numericValues);
+          if (anomalyResult.anomalies.length > 0) {
+            anomalies.push({
+              columnName: column.name,
+              anomalies: anomalyResult.anomalies,
+              threshold: anomalyResult.threshold,
+            });
+          }
+        }
+      }
+
       return {
         analysisId: analysisId,
-        statistics: statisticsData,
+        statistics: Object.entries(statisticsData).map(([columnName, stats]: any) => ({
+          columnName,
+          type: processedData.columns.find((c: any) => c.name === columnName)?.type || "unknown",
+          ...stats,
+        })),
+        anomalies,
       };
     }),
 

@@ -63,3 +63,10 @@
 - [x] Validação de ficheiros CSV rejeitando ficheiros válidos por tipo MIME incorreto
 - [x] Melhorar detecção de tipo de ficheiro baseada em extensão e conteúdo
 - [x] Erro "Buffer not defined" ao fazer upload de ficheiros no cliente
+
+## Funcionalidades em Desenvolvimento
+
+- [x] Implementar visualizador de tabela de dados com paginação
+- [x] Implementar painel de estatísticas descritivas
+- [x] Implementar gráficos interativos com Recharts
+- [x] Implementar estado compartilhado entre abas (ficheiro selecionado)

@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { useFile } from "@/contexts/FileContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -11,6 +12,7 @@ export default function FileUploadPage() {
   const [isLoading, setIsLoading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadMutation = trpc.analysis.uploadFile.useMutation();
+  const { setLastUploadedFileId, setSelectedFileId } = useFile();
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
@@ -57,6 +59,10 @@ export default function FileUploadPage() {
       });
 
       toast.success(`Ficheiro ${file.name} carregado com sucesso!`);
+      if (result && result.fileId) {
+        setLastUploadedFileId(result.fileId);
+        setSelectedFileId(result.fileId);
+      }
       console.log("Upload result:", result);
     } catch (error) {
       toast.error(`Erro ao carregar ficheiro: ${(error as Error).message}`);
