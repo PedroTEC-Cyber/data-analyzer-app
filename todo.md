@@ -56,3 +56,9 @@
 - [x] Testes de cálculo de estatísticas
 - [ ] Testes de geração de insights
 - [ ] Testes de exportação
+
+
+## Bugs Encontrados e Corrigidos
+
+- [x] Validação de ficheiros CSV rejeitando ficheiros válidos por tipo MIME incorreto
+- [x] Melhorar detecção de tipo de ficheiro baseada em extensão e conteúdo

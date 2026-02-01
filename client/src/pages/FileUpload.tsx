@@ -24,9 +24,12 @@ export default function FileUploadPage() {
   const handleFile = async (file: File) => {
     if (!file) return;
 
-    const validTypes = ["text/csv", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"];
-    if (!validTypes.includes(file.type) && !file.name.endsWith(".csv") && !file.name.endsWith(".xlsx")) {
-      toast.error("Apenas ficheiros CSV e Excel são suportados");
+    // Detecção mais robusta: verifica extensão e tipo MIME
+    const isCsv = file.name.toLowerCase().endsWith(".csv") || file.type === "text/csv" || file.type === "text/plain";
+    const isExcel = file.name.toLowerCase().endsWith(".xlsx") || file.type === "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+    
+    if (!isCsv && !isExcel) {
+      toast.error("Apenas ficheiros CSV e Excel (.xlsx) são suportados");
       return;
     }
 
@@ -39,7 +42,7 @@ export default function FileUploadPage() {
     try {
       const buffer = await file.arrayBuffer();
       const base64 = Buffer.from(buffer).toString("base64");
-      const fileType = file.name.endsWith(".xlsx") ? "xlsx" : "csv";
+      const fileType = file.name.toLowerCase().endsWith(".xlsx") ? "xlsx" : "csv";
 
       const result = await uploadMutation.mutateAsync({
         fileName: file.name,
