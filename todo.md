@@ -70,3 +70,4 @@
 - [x] Implementar painel de estatísticas descritivas
 - [x] Implementar gráficos interativos com Recharts
 - [x] Implementar estado compartilhado entre abas (ficheiro selecionado)
+- [x] Contexto de ficheiro selecionado não persiste após upload para outras abas

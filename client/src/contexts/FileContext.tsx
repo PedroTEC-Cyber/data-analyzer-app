@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext, useState, useEffect } from "react";
 
 interface FileContextType {
   selectedFileId: number | null;
@@ -10,8 +10,31 @@ interface FileContextType {
 const FileContext = createContext<FileContextType | undefined>(undefined);
 
 export function FileProvider({ children }: { children: React.ReactNode }) {
-  const [selectedFileId, setSelectedFileId] = useState<number | null>(null);
+  const [selectedFileId, setSelectedFileId] = useState<number | null>(() => {
+    if (typeof window !== "undefined") {
+      const stored = localStorage.getItem("selectedFileId");
+      return stored ? parseInt(stored, 10) : null;
+    }
+    return null;
+  });
+
   const [lastUploadedFileId, setLastUploadedFileId] = useState<number | null>(null);
+
+  // Sincronizar selectedFileId com localStorage
+  useEffect(() => {
+    if (selectedFileId !== null) {
+      localStorage.setItem("selectedFileId", selectedFileId.toString());
+    } else {
+      localStorage.removeItem("selectedFileId");
+    }
+  }, [selectedFileId]);
+
+  // Quando um novo ficheiro é carregado, atualizar selectedFileId automaticamente
+  useEffect(() => {
+    if (lastUploadedFileId !== null) {
+      setSelectedFileId(lastUploadedFileId);
+    }
+  }, [lastUploadedFileId]);
 
   return (
     <FileContext.Provider
