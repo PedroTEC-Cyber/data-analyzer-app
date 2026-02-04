@@ -71,3 +71,10 @@
 - [x] Implementar gráficos interativos com Recharts
 - [x] Implementar estado compartilhado entre abas (ficheiro selecionado)
 - [x] Contexto de ficheiro selecionado não persiste após upload para outras abas
+
+## Integração com IA
+
+- [x] Implementar procedimento tRPC para gerar insights com invokeLLM
+- [x] Criar componente frontend para exibir insights
+- [x] Integrar geração automática de insights na página de análises
+- [x] Testar geração de insights com dados reais

@@ -7,13 +7,39 @@ import { trpc } from "@/lib/trpc";
 import { useFile } from "@/contexts/FileContext";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { toast } from "sonner";
+import { InsightsPanel } from "@/components/InsightsPanel";
 
 export default function AnalyticsPage() {
   const { selectedFileId } = useFile();
   const [stats, setStats] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [insights, setInsights] = useState<any>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
+  const [insightsError, setInsightsError] = useState<string | null>(null);
 
   const calculateStatsMutation = trpc.analysis.calculateStatistics.useMutation();
+  const generateInsightsMutation = trpc.insights.generateInsights.useMutation();
+
+  const handleGenerateInsights = () => {
+    if (!selectedFileId) return;
+    setInsightsLoading(true);
+    setInsightsError(null);
+    generateInsightsMutation.mutate(
+      { fileId: selectedFileId },
+      {
+        onSuccess: (data) => {
+          setInsights(data.insights);
+          setInsightsLoading(false);
+          toast.success("Insights gerados com sucesso!");
+        },
+        onError: (error) => {
+          setInsightsLoading(false);
+          setInsightsError((error as any).message || "Erro ao gerar insights");
+          toast.error(`Erro ao gerar insights: ${(error as any).message}`);
+        },
+      }
+    );
+  };
 
   useEffect(() => {
     if (selectedFileId) {
@@ -25,6 +51,22 @@ export default function AnalyticsPage() {
             setStats(data);
             setIsLoading(false);
             toast.success("Estatísticas calculadas com sucesso!");
+            // Gerar insights automaticamente
+            setInsightsLoading(true);
+            setInsightsError(null);
+            generateInsightsMutation.mutate(
+              { fileId: selectedFileId },
+              {
+                onSuccess: (insightsData) => {
+                  setInsights(insightsData.insights);
+                  setInsightsLoading(false);
+                },
+                onError: (error) => {
+                  setInsightsLoading(false);
+                  setInsightsError((error as any).message || "Erro ao gerar insights");
+                },
+              }
+            );
           },
           onError: (error) => {
             setIsLoading(false);
@@ -109,6 +151,15 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Painel de Insights com IA */}
+      <InsightsPanel
+        insights={insights}
+        isLoading={insightsLoading}
+        error={insightsError}
+        fileName={selectedFileId?.toString()}
+        onRefresh={handleGenerateInsights}
+      />
+
       {/* Estatísticas Numéricas */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {numericStats.map((stat: any) => (
