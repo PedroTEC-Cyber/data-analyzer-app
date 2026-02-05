@@ -78,3 +78,9 @@
 - [x] Criar componente frontend para exibir insights
 - [x] Integrar geração automática de insights na página de análises
 - [x] Testar geração de insights com dados reais
+
+## Bugs em Investigação
+
+- [x] Processador CSV não detectava delimitador corretamente (ponto-e-vírgula, tab, etc)
+- [x] Dados não aparecem no Visualizador e Análises após upload bem-sucedido
+- [x] Corrigido: Implementada detecção automática de delimitador

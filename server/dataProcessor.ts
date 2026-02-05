@@ -37,13 +37,37 @@ function detectColumnType(values: any[]): ColumnInfo['type'] {
 }
 
 /**
+ * Detecta o delimitador do CSV (vírgula, ponto-e-vírgula, tab, etc)
+ */
+function detectDelimiter(content: string): string {
+  const firstLine = content.split('\n')[0];
+  const delimiters = [',', ';', '\t', '|'];
+  
+  let maxCount = 0;
+  let detectedDelimiter = ',';
+  
+  for (const delimiter of delimiters) {
+    const regex = new RegExp('\\' + delimiter, 'g');
+    const count = (firstLine.match(regex) || []).length;
+    if (count > maxCount) {
+      maxCount = count;
+      detectedDelimiter = delimiter;
+    }
+  }
+  
+  return detectedDelimiter;
+}
+
+/**
  * Processa ficheiro CSV
  */
 export function processCSV(content: string): ProcessedData {
+  const delimiter = detectDelimiter(content);
   const rows = parse(content, {
     columns: true,
     skip_empty_lines: true,
     trim: true,
+    delimiter: delimiter,
   }) as DataRow[];
   
   if (rows.length === 0) {
@@ -99,80 +123,58 @@ export function processExcel(buffer: Buffer): ProcessedData {
 }
 
 /**
- * Calcula estatísticas descritivas para uma coluna numérica
+ * Calcula estatísticas para valores numéricos
  */
-export function calculateNumericStatistics(values: number[]) {
-  const sortedValues = values.filter(v => !isNaN(v)).sort((a, b) => a - b);
-  
-  if (sortedValues.length === 0) {
-    return {
-      mean: null,
-      median: null,
-      stdDev: null,
-      min: null,
-      max: null,
-      count: 0,
-    };
-  }
-  
-  const sum = sortedValues.reduce((a, b) => a + b, 0);
-  const mean = sum / sortedValues.length;
-  
-  const median = sortedValues.length % 2 === 0
-    ? (sortedValues[sortedValues.length / 2 - 1] + sortedValues[sortedValues.length / 2]) / 2
-    : sortedValues[Math.floor(sortedValues.length / 2)];
-  
-  const variance = sortedValues.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / sortedValues.length;
+export function calculateNumericStatistics(values: number[]): any {
+  const sorted = [...values].sort((a, b) => a - b);
+  const sum = values.reduce((a, b) => a + b, 0);
+  const mean = sum / values.length;
+  const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / values.length;
   const stdDev = Math.sqrt(variance);
+  
+  const median = values.length % 2 === 0
+    ? (sorted[values.length / 2 - 1] + sorted[values.length / 2]) / 2
+    : sorted[Math.floor(values.length / 2)];
   
   return {
     mean: parseFloat(mean.toFixed(2)),
     median: parseFloat(median.toFixed(2)),
     stdDev: parseFloat(stdDev.toFixed(2)),
-    min: sortedValues[0],
-    max: sortedValues[sortedValues.length - 1],
-    count: sortedValues.length,
+    min: Math.min(...values),
+    max: Math.max(...values),
+    count: values.length,
   };
 }
 
 /**
- * Calcula estatísticas para uma coluna de string
+ * Calcula estatísticas para valores de texto
  */
-export function calculateStringStatistics(values: string[]) {
-  const nonNullValues = values.filter(v => v !== null && v !== undefined && v !== '');
-  const uniqueValues = new Set(nonNullValues);
+export function calculateStringStatistics(values: string[]): any {
+  const uniqueValues = new Set(values.filter(v => v !== null && v !== undefined));
+  const nullCount = values.filter(v => v === null || v === undefined || v === '').length;
   
   return {
-    count: nonNullValues.length,
     uniqueCount: uniqueValues.size,
-    nullCount: values.length - nonNullValues.length,
+    nullCount,
+    count: values.length,
+    mostCommon: Array.from(uniqueValues)[0] || null,
   };
 }
 
 /**
- * Detecta anomalias em dados numéricos usando IQR (Interquartile Range)
+ * Detecta anomalias usando o método IQR (Interquartile Range)
  */
-export function detectAnomalies(values: number[]): { anomalies: number[]; threshold: { lower: number; upper: number } } {
-  const sortedValues = values.filter(v => !isNaN(v)).sort((a, b) => a - b);
+export function detectAnomalies(values: number[]): number[] {
+  const sorted = [...values].sort((a, b) => a - b);
+  const q1Index = Math.floor(sorted.length * 0.25);
+  const q3Index = Math.floor(sorted.length * 0.75);
   
-  if (sortedValues.length < 4) {
-    return { anomalies: [], threshold: { lower: 0, upper: 0 } };
-  }
-  
-  const q1Index = Math.floor(sortedValues.length * 0.25);
-  const q3Index = Math.floor(sortedValues.length * 0.75);
-  
-  const q1 = sortedValues[q1Index];
-  const q3 = sortedValues[q3Index];
+  const q1 = sorted[q1Index];
+  const q3 = sorted[q3Index];
   const iqr = q3 - q1;
   
   const lowerBound = q1 - 1.5 * iqr;
   const upperBound = q3 + 1.5 * iqr;
   
-  const anomalies = values.filter(v => !isNaN(v) && (v < lowerBound || v > upperBound));
-  
-  return {
-    anomalies,
-    threshold: { lower: lowerBound, upper: upperBound },
-  };
+  return values.filter(v => v < lowerBound || v > upperBound);
 }

@@ -214,8 +214,7 @@ export const analysisRouter = router({
 
           statisticsData[column.name] = {
             ...stats,
-            anomalies: anomalies.anomalies.length,
-            anomalyThreshold: anomalies.threshold,
+            anomalies: anomalies.length,
           };
 
           await createStatistics({
@@ -257,11 +256,10 @@ export const analysisRouter = router({
             .map((v) => Number(v))
             .filter((v) => !isNaN(v));
           const anomalyResult = detectAnomalies(numericValues);
-          if (anomalyResult.anomalies.length > 0) {
+          if (anomalyResult.length > 0) {
             anomalies.push({
               columnName: column.name,
-              anomalies: anomalyResult.anomalies,
-              threshold: anomalyResult.threshold,
+              anomalies: anomalyResult,
             });
           }
         }
