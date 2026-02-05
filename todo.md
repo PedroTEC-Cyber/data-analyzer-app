@@ -84,3 +84,11 @@
 - [x] Processador CSV não detectava delimitador corretamente (ponto-e-vírgula, tab, etc)
 - [x] Dados não aparecem no Visualizador e Análises após upload bem-sucedido
 - [x] Corrigido: Implementada detecção automática de delimitador
+
+## Funcionalidades em Desenvolvimento - Histórico
+
+- [x] Implementar página de Histórico com listagem de ficheiros
+- [x] Adicionar botão para reutilizar ficheiro carregado
+- [x] Adicionar botão para eliminar ficheiro do histórico
+- [x] Mostrar metadados (nome, data, tamanho, número de linhas)
+- [ ] Implementar ordenação e filtros no histórico

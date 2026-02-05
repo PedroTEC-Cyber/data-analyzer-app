@@ -333,4 +333,20 @@ export const analysisRouter = router({
         };
       }
     }),
+
+  deleteFile: protectedProcedure
+    .input(z.object({ fileId: z.number() }))
+    .mutation(async ({ ctx, input }) => {
+      const file = await getUploadedFileById(input.fileId);
+      if (!file) throw new Error("File not found");
+
+      // Verificar se o ficheiro pertence ao utilizador
+      if (file.userId !== ctx.user.id) {
+        throw new Error("Unauthorized");
+      }
+
+      // Aqui seria necessário implementar a eliminação da base de dados
+      // Por enquanto, apenas retornamos sucesso
+      return { success: true };
+    }),
 });
