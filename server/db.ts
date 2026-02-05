@@ -117,7 +117,8 @@ export async function createAnalysis(analysis: InsertAnalysis) {
   if (!db) throw new Error("Database not available");
   
   const result = await db.insert(analyses).values(analysis);
-  return result;
+  // Retornar o objeto com o ID inserido
+  return { insertId: result[0] };
 }
 
 export async function getAnalysesByFileId(fileId: number) {

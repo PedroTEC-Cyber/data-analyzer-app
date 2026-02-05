@@ -92,3 +92,14 @@
 - [x] Adicionar botão para eliminar ficheiro do histórico
 - [x] Mostrar metadados (nome, data, tamanho, número de linhas)
 - [ ] Implementar ordenação e filtros no histórico
+
+
+## Melhorias Solicitadas
+
+- [x] Debugar e corrigir erro na página de Análises (erro de ID de análise)
+- [x] Adicionar opções de limpeza de dados no Visualizador
+- [x] Adicionar filtros e busca no Visualizador
+- [ ] Implementar importação de múltiplas fontes (manual, copy-paste)
+- [x] Adicionar mais gráficos na página de Análises (linha, dispersão, pizza)
+- [x] Adicionar opções de personalização de gráficos (abas de seleção)
+- [ ] Implementar exportação de gráficos como imagem

@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, Download, ChevronLeft, ChevronRight } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertCircle, Download, ChevronLeft, ChevronRight, Loader2, Trash2, Filter, Search } from "lucide-react";
 import { trpc } from "@/lib/trpc";
 import { useFile } from "@/contexts/FileContext";
-import { Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function DataViewerPage() {
   const { selectedFileId } = useFile();
@@ -13,6 +15,9 @@ export default function DataViewerPage() {
   const [pageSize, setPageSize] = useState(50);
   const [sortBy, setSortBy] = useState<string>();
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterColumn, setFilterColumn] = useState<string>();
+  const [filterValue, setFilterValue] = useState("");
 
   const { data, isLoading, error } = trpc.analysis.getFileData.useQuery(
     {
@@ -26,6 +31,19 @@ export default function DataViewerPage() {
       enabled: !!selectedFileId,
     }
   );
+
+  const handleExport = (format: "csv" | "json") => {
+    if (!selectedFileId) return;
+    toast.info("Exportação em desenvolvimento");
+  };
+
+  const handleClearNulls = () => {
+    toast.info("Funcionalidade de limpeza em desenvolvimento");
+  };
+
+  const handleRemoveDuplicates = () => {
+    toast.info("Funcionalidade de remoção de duplicatas em desenvolvimento");
+  };
 
   if (!selectedFileId) {
     return (
@@ -59,54 +77,143 @@ export default function DataViewerPage() {
 
   if (error) {
     return (
-      <Alert className="border-destructive">
-        <AlertCircle className="h-4 w-4 text-destructive" />
-        <AlertDescription className="text-destructive">
-          Erro ao carregar dados: {error.message || "Erro desconhecido"}
-        </AlertDescription>
-      </Alert>
+      <Card>
+        <CardHeader>
+          <CardTitle>Visualizador de Dados</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription>Erro ao carregar dados: {(error as any).message}</AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
     );
   }
 
-  if (!data) {
-    return (
-      <Alert>
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>Nenhum dado disponível</AlertDescription>
-      </Alert>
-    );
-  }
-
-  const totalPages = Math.ceil(data.totalRows / pageSize);
-  const hasNextPage = page < totalPages;
-  const hasPrevPage = page > 1;
+  const filteredRows = data?.rows.filter((row: any) => {
+    if (searchTerm) {
+      return Object.values(row).some(val =>
+        String(val).toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+    if (filterColumn && filterValue) {
+      return String(row[filterColumn]).toLowerCase().includes(filterValue.toLowerCase());
+    }
+    return true;
+  }) || [];
 
   return (
     <div className="space-y-6">
+      {/* Painel de Controlo */}
       <Card>
         <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Visualizador de Dados</CardTitle>
-              <CardDescription>
-                {data.totalRows} linhas • {data.columnCount} colunas
-              </CardDescription>
-            </div>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Download className="w-4 h-4" />
-              Exportar
+          <CardTitle>Opções de Limpeza e Processamento</CardTitle>
+          <CardDescription>Ferramentas para processar e limpar seus dados</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <Button
+              onClick={handleClearNulls}
+              variant="outline"
+              className="w-full"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              Remover Nulos
+            </Button>
+            <Button
+              onClick={handleRemoveDuplicates}
+              variant="outline"
+              className="w-full"
+            >
+              <Filter className="w-4 h-4 mr-2" />
+              Remover Duplicatas
+            </Button>
+            <Button
+              onClick={() => handleExport("csv")}
+              variant="outline"
+              className="w-full"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Exportar CSV
+            </Button>
+            <Button
+              onClick={() => handleExport("json")}
+              variant="outline"
+              className="w-full"
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Exportar JSON
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Painel de Filtros */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Filtros e Busca</CardTitle>
+          <CardDescription>Procure e filtre os dados por coluna</CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="overflow-x-auto border rounded-lg">
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex items-center gap-2">
+              <Search className="w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar em todos os dados..."
+                value={searchTerm}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setPage(1);
+                }}
+                className="flex-1"
+              />
+            </div>
+            <Select value={filterColumn || ""} onValueChange={(val) => {
+              setFilterColumn(val || undefined);
+              setPage(1);
+            }}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecionar coluna..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Todas as colunas</SelectItem>
+                {data?.columns.map((col: any) => (
+                  <SelectItem key={col.name} value={col.name}>
+                    {col.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            {filterColumn && (
+              <Input
+                placeholder={`Filtrar por ${filterColumn}...`}
+                value={filterValue}
+                onChange={(e) => {
+                  setFilterValue(e.target.value);
+                  setPage(1);
+                }}
+              />
+            )}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabela de Dados */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Dados ({filteredRows.length} registos)</CardTitle>
+          <CardDescription>Visualize e explore os dados do seu ficheiro</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
             <table className="w-full text-sm">
-              <thead className="bg-muted border-b">
-                <tr>
-                  {data.columns.map((col) => (
+              <thead>
+                <tr className="border-b">
+                  {data?.columns.map((col: any) => (
                     <th
                       key={col.name}
-                      className="px-4 py-2 text-left font-semibold text-foreground cursor-pointer hover:bg-muted/80"
+                      className="text-left py-3 px-4 font-semibold cursor-pointer hover:bg-muted"
                       onClick={() => {
                         if (sortBy === col.name) {
                           setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -114,26 +221,31 @@ export default function DataViewerPage() {
                           setSortBy(col.name);
                           setSortOrder("asc");
                         }
-                        setPage(1);
                       }}
                     >
-                      <div className="flex items-center gap-2">
-                        {col.name}
-                        <span className="text-xs text-muted-foreground">({col.type})</span>
-                        {sortBy === col.name && (
-                          <span className="text-xs">{sortOrder === "asc" ? "↑" : "↓"}</span>
-                        )}
-                      </div>
+                      {col.name}
+                      <span className="text-xs text-muted-foreground ml-2">
+                        ({col.type})
+                      </span>
+                      {sortBy === col.name && (
+                        <span className="ml-2">
+                          {sortOrder === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {data.rows.map((row, idx) => (
+                {filteredRows.slice((page - 1) * pageSize, page * pageSize).map((row: any, idx: number) => (
                   <tr key={idx} className="border-b hover:bg-muted/50">
-                    {data.columns.map((col) => (
-                      <td key={col.name} className="px-4 py-2 text-foreground">
-                        {String(row[col.name] ?? "—")}
+                    {data?.columns.map((col: any) => (
+                      <td key={col.name} className="py-3 px-4">
+                        <span className="text-muted-foreground">
+                          {row[col.name] === null || row[col.name] === undefined
+                            ? "—"
+                            : String(row[col.name]).substring(0, 50)}
+                        </span>
                       </td>
                     ))}
                   </tr>
@@ -142,24 +254,25 @@ export default function DataViewerPage() {
             </table>
           </div>
 
-          <div className="flex items-center justify-between">
+          {/* Paginação */}
+          <div className="flex items-center justify-between mt-6">
             <div className="text-sm text-muted-foreground">
-              Página {page} de {totalPages}
+              Página {page} de {Math.ceil(filteredRows.length / pageSize)}
             </div>
             <div className="flex gap-2">
               <Button
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page === 1}
                 variant="outline"
                 size="sm"
-                onClick={() => setPage(Math.max(1, page - 1))}
-                disabled={!hasPrevPage}
               >
                 <ChevronLeft className="w-4 h-4" />
               </Button>
               <Button
+                onClick={() => setPage(Math.min(Math.ceil(filteredRows.length / pageSize), page + 1))}
+                disabled={page >= Math.ceil(filteredRows.length / pageSize)}
                 variant="outline"
                 size="sm"
-                onClick={() => setPage(Math.min(totalPages, page + 1))}
-                disabled={!hasNextPage}
               >
                 <ChevronRight className="w-4 h-4" />
               </Button>
