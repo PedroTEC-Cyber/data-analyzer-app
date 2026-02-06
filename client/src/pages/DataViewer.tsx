@@ -177,7 +177,6 @@ export default function DataViewerPage() {
                 <SelectValue placeholder="Selecionar coluna..." />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas as colunas</SelectItem>
                 {data?.columns.map((col: any) => (
                   <SelectItem key={col.name} value={col.name}>
                     {col.name}
