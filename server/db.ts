@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, uploadedFiles, analyses, statistics, InsertUploadedFile, InsertAnalysis, InsertStatistic } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -117,8 +117,12 @@ export async function createAnalysis(analysis: InsertAnalysis) {
   if (!db) throw new Error("Database not available");
   
   const result = await db.insert(analyses).values(analysis);
-  // Retornar o objeto com o ID inserido
-  return { insertId: result[0] };
+  // Drizzle retorna um array com info de inserção, extrair o ID
+  // result é um array com metadados da inserção
+  // Precisamos fazer uma query para obter o ID inserido
+  const inserted = await db.select().from(analyses).where(eq(analyses.userId, analysis.userId)).orderBy(desc(analyses.id)).limit(1);
+  if (inserted.length === 0) throw new Error("Failed to retrieve inserted analysis");
+  return { insertId: inserted[0].id };
 }
 
 export async function getAnalysesByFileId(fileId: number) {
