@@ -198,7 +198,15 @@ export const analysisRouter = router({
         analysisData: JSON.stringify({}),
       });
 
-      const analysisId = (analysis as any).insertId as number;
+      // Extract analysisId from Drizzle response
+      let analysisId: number;
+      if (Array.isArray(analysis) && analysis.length > 0) {
+        analysisId = (analysis[0] as any).id;
+      } else if ((analysis as any).insertId) {
+        analysisId = (analysis as any).insertId;
+      } else {
+        throw new Error("Failed to get analysis ID");
+      }
       const statisticsData: any = {};
       const columnTypes = JSON.parse(file.columnTypes);
 
@@ -221,11 +229,11 @@ export const analysisRouter = router({
             analysisId: analysisId,
             columnName: column.name,
             columnType: column.type,
-            mean: stats.mean?.toString(),
-            median: stats.median?.toString(),
-            stdDev: stats.stdDev?.toString(),
-            min: stats.min?.toString(),
-            max: stats.max?.toString(),
+            mean: stats.mean !== undefined ? stats.mean.toString() : null,
+            median: stats.median !== undefined ? stats.median.toString() : null,
+            stdDev: stats.stdDev !== undefined ? stats.stdDev.toString() : null,
+            min: stats.min !== undefined ? stats.min.toString() : null,
+            max: stats.max !== undefined ? stats.max.toString() : null,
             count: stats.count,
             nullCount: values.length - stats.count,
             uniqueCount: new Set(numericValues).size,
